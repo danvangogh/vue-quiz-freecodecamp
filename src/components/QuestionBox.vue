@@ -1,22 +1,107 @@
 <template>
   <div>
-    <b-jumbotron header="BootstrapVue" lead="Bootstrap 4 Components for Vue.js 2">
-      <template slot="header">BootstrapVue</template>
+    <b-jumbotron lead="Bootstrap 4 Components for Vue.js 2">
 
         <template slot="lead">
-          This is a simple hero unit, a simple jumbotron-style component for calling extra attention to
-          featured content or information.
+          {{ currentQuestion.question }}
         </template>
 
         <hr class="my-4">
 
-        <p>
-          It uses utility classes for typography and spacing to space content out within the larger
-          container.
-        </p>
+        <b-list-group>
+          <b-list-group-item
+            v-for="(answer, index) in answers"
+            :key="index"
+            @click.prevent="selectAnswer(index)"
+            :class="[selectedIndex === index ? 'selected' : '']">
+            {{ answer }}
+          </b-list-group-item>
+        </b-list-group>
 
-      <b-button variant="primary" href="#">Do Something</b-button>
-      <b-button variant="success" href="#">Do Something Else</b-button>
+      <b-button
+        variant="primary"
+        @click="submitAnswer">
+        Submit
+      </b-button>
+      <b-button @click="next" variant="success" href="#">
+        Next
+      </b-button>
     </b-jumbotron>
   </div>
 </template>
+
+<script>
+  import _ from 'lodash'
+  export default {
+    props: {
+      currentQuestion: Object,
+      next: Function,
+      increment: Function,
+    },
+    data() {
+      return {
+        selectedIndex: null,
+        shuffledAnswers: [],
+      }
+    },
+    computed: {
+      answers() {
+        let answers = [...this.currentQuestion.incorrect_answers]
+        answers.push(this.currentQuestion.correct_answer)
+        return answers
+      }
+    },
+    watch: {
+      currentQuestion: {
+        immediate: true,
+        handler() {
+          this.selectedIndex = null
+          this.shuffleAnswers()
+        }
+      }
+    },
+    methods: {
+      selectAnswer(index) {
+        this.selectedIndex = index
+      },
+      shuffleAnswers() {
+        let answers = [...this.currentQuestion.incorrect_answers, this.currentQuestion.correct_answer]
+        this.shuffledAnswers = _.shuffle(answers)
+      },
+      submitAnswer() {
+        let isCorrect = false
+        if (this.selectedIndex === this.correctIndex) {
+          isCorrect = true
+        }
+        this.increment(isCorrect)
+      }
+    },
+  }
+</script>
+
+<style scoped>
+  .list-group {
+    margin: 25px;
+    cursor: pointer;
+  }
+
+  .list-group-item:hover {
+    background: #fafafa;
+  }
+
+  .btn {
+    margin: 0 5px;
+  }
+
+  .selected {
+    background-color: lightblue;
+  }
+
+  .correct {
+    background-color: blue;
+  }
+
+  .incorrect {
+    background-color: red;
+  }
+</style>
