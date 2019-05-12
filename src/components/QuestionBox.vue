@@ -13,14 +13,15 @@
             v-for="(answer, index) in answers"
             :key="index"
             @click.prevent="selectAnswer(index)"
-            :class="[selectedIndex === index ? 'selected' : '']">
+            :class="answerClass(index)">
             {{ answer }}
           </b-list-group-item>
         </b-list-group>
 
       <b-button
         variant="primary"
-        @click="submitAnswer">
+        @click="submitAnswer"
+        :disabled="selectedIndex === null || answered">
         Submit
       </b-button>
       <b-button @click="next" variant="success" href="#">
@@ -38,10 +39,12 @@
       next: Function,
       increment: Function,
     },
-    data() {
+    data: function() {
       return {
         selectedIndex: null,
+        correctIndex: null,
         shuffledAnswers: [],
+        answered: false
       }
     },
     computed: {
@@ -56,6 +59,7 @@
         immediate: true,
         handler() {
           this.selectedIndex = null
+          this.answered = false
           this.shuffleAnswers()
         }
       }
@@ -64,19 +68,34 @@
       selectAnswer(index) {
         this.selectedIndex = index
       },
-      shuffleAnswers() {
-        let answers = [...this.currentQuestion.incorrect_answers, this.currentQuestion.correct_answer]
-        this.shuffledAnswers = _.shuffle(answers)
-      },
       submitAnswer() {
         let isCorrect = false
         if (this.selectedIndex === this.correctIndex) {
           isCorrect = true
         }
+        this.answered = true
         this.increment(isCorrect)
+      },
+      shuffleAnswers() {
+        let answers = [...this.currentQuestion.incorrect_answers, this.currentQuestion.correct_answer]
+        this.shuffledAnswers = _.shuffle(answers)
+        this.correctIndex = this.shuffledAnswers.indexOf(this.currentQuestion.correct_answer)
+      },
+      answerClass(index) {
+
+      let answerClass = ''
+
+      if (!this.answered && this.selectedIndex === index) {
+        answerClass = 'selected'
+      } else if (this.answered && this.correctIndex === index) {
+        answerClass = 'correct'
+      } else if (this.answered && this.selectedIndex === index && this.correctIndex !== index) {
+        answerClass = 'incorrect'
       }
-    },
+      return answerClass
+    }
   }
+}
 </script>
 
 <style scoped>
@@ -98,7 +117,7 @@
   }
 
   .correct {
-    background-color: blue;
+    background-color: green;
   }
 
   .incorrect {
